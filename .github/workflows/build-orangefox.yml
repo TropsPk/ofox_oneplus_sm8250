@@ -19,9 +19,9 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MANIFEST_BRANCH: "12.1"
       
-      DEVICE_NAME: "opkona"
-      MAKEFILE_NAME: "ofox_opkona"
-      DEVICE_PATH: "device/oneplus/opkona"
+      DEVICE_NAME: "instantnoodle"
+      MAKEFILE_NAME: "ofox_instantnoodle"
+      DEVICE_PATH: "device/oneplus/instantnoodle"
       DEVICE_TREE_URL: "${{ github.server_url }}/${{ github.repository }}"
       DEVICE_TREE_BRANCH: "${{ github.ref_name }}"
       
