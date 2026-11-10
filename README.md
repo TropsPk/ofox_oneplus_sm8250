@@ -9,7 +9,7 @@ Goal: decrypt `/data` on the stock ROM.
 ## Layout
 - `BoardConfig.mk`, `device.mk`, `ofox_instantnoodle.mk`, `AndroidProducts.mk`, `Android.mk`, `Android.bp`, `vendorsetup.sh`, `system.prop`, `ofox.dependencies`
 - `recovery/root/` - init rc files, ueventd, `recovery.fstab`, `twrp.flags`, vintf manifests, `runatboot.sh`
-- `prebuilt/` - `Image`, `dtb.img`, `dtbo.img`
+- `prebuilt/` - `dtb.img`, `dtbo.img` (the kernel is built from source, see Kernel)
 - `bootctrl/`, `gpt-utils/` - module definitions used by `device.mk`
 - `extract-files.sh`, `proprietary-files-recovery.txt`, `proprietary-files-recovery.sha256` - pull the decryption blobs from the phone
 - `.github/workflows/build-orangefox.yml` - build in GitHub Actions
@@ -22,12 +22,14 @@ Goal: decrypt `/data` on the stock ROM.
    `source build/envsetup.sh && lunch ofox_instantnoodle-eng && mka recoveryimage`.
 4. Test with `fastboot boot recovery.img` before flashing anything.
 
+## Kernel
+Built from source: `TropsPk/Tropsi_X_Kernel_SM8250` (branch set in the workflow) is cloned to `kernel/oneplus/sm8250`, config `vendor/kona-perf_defconfig`. Not built yet, so it is untested.
+
 ## Prebuilt files
-All three come from the TropsPk/Tropsi-Builder release `1794145644`, `instantnoodle-oxygen13.1_a13_Tropsi_X_noroot-20261108134644-AnyKernel3.zip` (sha256 `e56b4c63ff6e49e981efd090ff501421b6553ba9dc50da3535b20c8aaa5f8c3b`).
+Both come from the TropsPk/Tropsi-Builder release `1794145644`, `instantnoodle-oxygen13.1_a13_Tropsi_X_noroot-20261108134644-AnyKernel3.zip` (sha256 `e56b4c63ff6e49e981efd090ff501421b6553ba9dc50da3535b20c8aaa5f8c3b`).
 
 | File | sha256 |
 |---|---|
-| `Image` | `05ad91f1e5ddfd95cdbe2f458f17f1f0ee6c892b425b82c0628e4b74d655ec53` |
 | `dtb.img` (zip: `dtb`) | `90013c5fc39ac520c22601cbe556f1ffe38aca092bc1f520146be509e85884ee` |
 | `dtbo.img` | `afd49d1077bf92139f5172f0a7ee126c0c3c8209951872b0fd330b13bf21bfe7` |
 
