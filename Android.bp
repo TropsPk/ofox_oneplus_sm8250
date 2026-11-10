@@ -1,0 +1,7 @@
+// Soong namespace for the QCOM bootctrl and gpt-utils modules (needs hardware/qcom/bootctrl and device/qcom/common/gpt-utils in the manifest).
+soong_namespace {
+    imports: [
+        "hardware/qcom/bootctrl",
+        "device/qcom/common/gpt-utils",
+    ],
+}
