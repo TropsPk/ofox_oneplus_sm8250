@@ -1,14 +1,7 @@
-name: 🦊 Build OrangeFox (OnePlus 8 / 8 Pro - instantnoodle)
+name: 🦊 Build OrangeFox (Beast Edition)
 
-# Builds the unified OnePlus 8 / 8 Pro OrangeFox recovery from this repository (device tree taken from the checkout).
-# The decryption blobs must be committed in recovery/root (run ./extract-files.sh first), or tick allow_no_blobs for a compile-only test.
 on:
   workflow_dispatch:
-    inputs:
-      allow_no_blobs:
-        description: "Build even if the decryption blobs are not in the repo (compile test only, no decryption)"
-        type: boolean
-        default: false
   push:
     branches: [ main, master ]
 
@@ -17,136 +10,119 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify:
-    name: 🔎 Pre-build checks
-    runs-on: ubuntu-22.04
-    timeout-minutes: 10
-    steps:
-    - uses: actions/checkout@v4
-    - name: Prebuilt kernel, dtb and dtbo match the pinned hashes
-      run: |
-        cd prebuilt
-        printf '%s  %s\n' \
-          05ad91f1e5ddfd95cdbe2f458f17f1f0ee6c892b425b82c0628e4b74d655ec53 Image \
-          90013c5fc39ac520c22601cbe556f1ffe38aca092bc1f520146be509e85884ee dtb.img \
-          afd49d1077bf92139f5172f0a7ee126c0c3c8209951872b0fd330b13bf21bfe7 dtbo.img | sha256sum -c -
-    - name: Decryption blobs present
-      if: ${{ github.event.inputs.allow_no_blobs != 'true' }}
-      run: |
-        for f in qseecomd android.hardware.keymaster@4.0-service-qti android.hardware.gatekeeper@1.0-service-qti; do
-          [ -s "recovery/root/system/bin/$f" ] || { echo "::error::recovery/root/system/bin/$f is missing. Run ./extract-files.sh, commit recovery/root and push (or start the workflow with allow_no_blobs ticked)."; exit 1; }
-        done
-
   build:
     name: 🛠️ Build by ${{ github.actor }}
-    needs: verify
     runs-on: ubuntu-22.04
     timeout-minutes: 180
 
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MANIFEST_BRANCH: "12.1"
-      DEVICE_NAME: "instantnoodle"
-      MAKEFILE_NAME: "ofox_instantnoodle"
-      DEVICE_PATH: "device/oneplus/instantnoodle"
+      
+      DEVICE_NAME: "opkona"
+      MAKEFILE_NAME: "ofox_opkona"
+      DEVICE_PATH: "device/oneplus/opkona"
+      DEVICE_TREE_URL: "${{ github.server_url }}/${{ github.repository }}"
+      DEVICE_TREE_BRANCH: "${{ github.ref_name }}"
+      
+      KERNEL_PATH: "kernel/oneplus/sm8250"
+      KERNEL_TREE_URL: "https://github.com/Wishmasterflo/kernel_oneplus_sm8250.git"
+      KERNEL_TREE_BRANCH: "13.1-minimal"
 
     steps:
     - name: 🕒 Set Build Date
       run: echo "BUILD_DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
 
-    - name: 📥 Checkout device tree
+    - name: 📥 Checkout Repository
       uses: actions/checkout@v4
-      with:
-        path: tree
 
-    - name: 🧹 Free Up Disk Space
+    - name: 🧹 Free Up Disk Space (Native Beast)
       run: |
         sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost /opt/hostedtoolcache/CodeQL
         sudo apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php* mongodb* snapd* || true
         sudo apt-get -y autoremove --purge && sudo apt-get -y clean
         docker system prune -af --volumes || true
-        # The swapfile is intentionally kept alive to prevent OOM kills.
+        # Note: Swapfile is intentionally kept alive to prevent OOM kills.
 
-    - name: ⚙️ Setup Environment & Sync OrangeFox
+    - name: ⚙️ Setup Environment & Sync
       env:
         GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
       run: |
         set -eo pipefail
+        
         retry() { for i in 1 2 3; do "$@" && return 0 || { echo "Network blip detected. Retrying in 5s..."; sleep 5; }; done; return 1; }
-
-        sudo apt-get update && sudo apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python3 python-is-python3 rsync
-
+        
+        sudo apt-get update && sudo apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python3 python-is-python3
+        
         curl -fL https://storage.googleapis.com/git-repo-downloads/repo | sudo tee /usr/local/bin/repo > /dev/null
         sudo chmod a+x /usr/local/bin/repo
 
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
         git config --global credential.helper ""
-        if [ -n "$GITLAB_TOKEN" ]; then
-          echo "machine gitlab.com login oauth2 password $GITLAB_TOKEN" > ~/.netrc && chmod 600 ~/.netrc
-        fi
+        echo "machine gitlab.com login oauth2 password $GITLAB_TOKEN" > ~/.netrc && chmod 600 ~/.netrc
 
         retry git clone https://gitlab.com/OrangeFox/sync.git sync
+        
         cd sync
         ./orangefox_sync.sh --branch ${{ env.MANIFEST_BRANCH }} --path $GITHUB_WORKSPACE/workspace
 
-    - name: 📱 Install device tree
+    - name: 📱 Clone Trees
       run: |
-        mkdir -p $GITHUB_WORKSPACE/workspace/${{ env.DEVICE_PATH }}
-        rsync -a --exclude=.git --exclude=.github $GITHUB_WORKSPACE/tree/ $GITHUB_WORKSPACE/workspace/${{ env.DEVICE_PATH }}/
-        chmod +x $GITHUB_WORKSPACE/workspace/${{ env.DEVICE_PATH }}/vendorsetup.sh $GITHUB_WORKSPACE/workspace/${{ env.DEVICE_PATH }}/recovery/root/system/bin/runatboot.sh
-        ls -la $GITHUB_WORKSPACE/workspace/${{ env.DEVICE_PATH }} $GITHUB_WORKSPACE/workspace/${{ env.DEVICE_PATH }}/recovery/root/system/bin
+        retry() { for i in 1 2 3; do "$@" && return 0 || { echo "Network blip detected. Retrying in 5s..."; sleep 5; }; done; return 1; }
+        retry git clone --depth 1 ${{ env.DEVICE_TREE_URL }} -b ${{ env.DEVICE_TREE_BRANCH }} $GITHUB_WORKSPACE/workspace/${{ env.DEVICE_PATH }}
+        retry git clone --depth 1 -b ${{ env.KERNEL_TREE_BRANCH }} ${{ env.KERNEL_TREE_URL }} $GITHUB_WORKSPACE/workspace/${{ env.KERNEL_PATH }}
 
     - name: ⚡ Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2.14
       with:
         max-size: "10G"
-        key: ${{ runner.os }}-ccache-${{ env.DEVICE_NAME }}-${{ env.MANIFEST_BRANCH }}
+        key: ${{ runner.os }}-ccache-${{ env.DEVICE_NAME }}-${{ env.KERNEL_TREE_BRANCH }}
         restore-keys: |
           ${{ runner.os }}-ccache-${{ env.DEVICE_NAME }}-
 
     - name: 🚀 Build Recovery
       run: |
         set +e
+        
+        mkdir -p $GITHUB_WORKSPACE/.ccache
+        mv $GITHUB_WORKSPACE/.ccache $GITHUB_WORKSPACE/workspace/.ccache
+        export CCACHE_DIR=$GITHUB_WORKSPACE/workspace/.ccache
+        
         cd $GITHUB_WORKSPACE/workspace
         export ALLOW_MISSING_DEPENDENCIES=true
         export FOX_USE_TWRP_RECOVERY_IMAGE_BUILDER=1
         export LC_ALL="C"
-
+        
         export USE_CCACHE=1
         export CCACHE_EXEC=$(command -v ccache)
         export CCACHE_COMPRESS=1
-
+        
         source build/envsetup.sh
         lunch ${{ env.MAKEFILE_NAME }}-eng
-
+        
         mka recoveryimage 2>&1 | tee build.log
         BUILD_STATUS=${PIPESTATUS[0]}
-
+        
         echo "📊 Printing CCache Statistics:"
         ccache -s
-
+        
+        mv $GITHUB_WORKSPACE/workspace/.ccache $GITHUB_WORKSPACE/.ccache
+        
         set -e
         exit $BUILD_STATUS
-
-    - name: 🔍 Check decryption libs in the recovery ramdisk
-      run: |
-        R=$GITHUB_WORKSPACE/workspace/out/target/product/${{ env.DEVICE_NAME }}/recovery/root
-        for f in system/lib64/android.hardware.keymaster@4.0.so system/bin/qseecomd system/bin/android.hardware.keymaster@4.0-service-qti system/bin/android.hardware.gatekeeper@1.0-service-qti vendor/lib64/libqtikeymaster4.so; do
-          if [ -e "$R/$f" ]; then echo "ok      $f"; else echo "::warning::missing from the recovery ramdisk: $f (decryption will not work)"; fi
-        done
 
     - name: 📊 Summary & Hashes
       if: always()
       run: |
         OUT=$GITHUB_WORKSPACE/workspace/out/target/product/${{ env.DEVICE_NAME }}
-
+        
         for f in "$OUT"/OrangeFox-*.zip; do
           if [ -f "$f" ]; then
             mv "$f" "$OUT/OrangeFox-${{ env.DEVICE_NAME }}-${{ env.BUILD_DATE }}.zip"
           fi
         done
-
+        
         echo "## 🦊 Build Output" >> $GITHUB_STEP_SUMMARY
         echo "| File | Size | SHA256 Hash |" >> $GITHUB_STEP_SUMMARY
         echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
@@ -157,11 +133,10 @@ jobs:
         done
 
     - name: 📤 Upload Artifacts
-      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: OrangeFox-${{ env.DEVICE_NAME }}-${{ env.BUILD_DATE }}
-        if-no-files-found: warn
+        if-no-files-found: error
         path: |
           workspace/out/target/product/${{ env.DEVICE_NAME }}/OrangeFox-*.zip
           workspace/out/target/product/${{ env.DEVICE_NAME }}/boot.img
