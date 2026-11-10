@@ -47,3 +47,24 @@ lib64 libspcom.so
 ?fw cryptoeng.mdt
 ?lib64 librpmbengclient.so
 ?lib64 libsecurity_event_dcs.so
+# qseecomd dlopen()s these at runtime (seen in /proc/<pid>/maps of stock qseecomd on 593, not in its ELF NEEDED list). Both reference trees ship them too.
+?lib64 libGPreqcancel.so
+?lib64 libGPreqcancel_svc.so
+?lib64 libStDrvInt.so
+?lib64 libdisplayconfig.qti.so
+?lib64 libdrm.so
+?lib64 libdrmtime.so
+?lib64 libops.so
+?lib64 libqisl.so
+?lib64 librpmb.so
+?lib64 libsecureui.so
+?lib64 libsecureui_svcsock.so
+?lib64 libspl.so
+?lib64 libssd.so
+?lib64 libtime_genoff.so
+?lib64 vendor.display.config@1.0.so
+?lib64 vendor.display.config@2.0.so
+?lib64 vendor.qti.hardware.tui_comm@1.0.so
+# cryptoeng service links these two vendor stubs on stock (/vendor/lib64); recovery may not have them.
+?lib64 libhidltransport.so
+?lib64 libhwbinder.so
