@@ -28,6 +28,13 @@ TARGET_USES_UEFI := true
 TARGET_USES_HARDWARE_QCOM_BOOTCTRL := true
 
 # --- A/B + dynamic partitions ----------------------------------------------
+# /vendor must be a real directory in the recovery ramdisk. AOSP 12.1 (board_config.mk) defaults TARGET_COPY_OUT_VENDOR to
+# system/vendor, and then system/core rootdir/Android.mk makes root/vendor a SYMLINK to /system/vendor. The ramdisk step
+# (core/Makefile, rsync of the root tree) then fails against the real recovery/root/vendor directory that earlier steps fill.
+# Same two lines as the Wishmasterflo opkona tree.
+BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
+TARGET_COPY_OUT_VENDOR := vendor
+
 AB_OTA_UPDATER := true
 # Same list as ro.product.ab_ota_partitions on the stock OnePlus 8 (recovery is included, no `reserve`)
 AB_OTA_PARTITIONS += \
