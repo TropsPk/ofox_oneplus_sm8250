@@ -14,6 +14,7 @@ service hal_cryptoeng_oplus /system/bin/vendor.oplus.hardware.cryptoeng@1.0-serv
 # Start it by hand: adb shell start vendor.keymasterd
 service vendor.keymasterd /system/bin/keymasterd
     class late_start
+    disabled
     user system
     group system
     disabled
