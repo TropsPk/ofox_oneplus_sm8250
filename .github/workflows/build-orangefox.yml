@@ -109,6 +109,11 @@ jobs:
         export CCACHE_EXEC=$(command -v ccache)
         export CCACHE_COMPRESS=1
         
+        # Minimal OrangeFox manifest lacks the CTS release list that cts.mk checks
+        CTS_FILE=cts/tests/tests/os/assets/platform_releases.txt
+        mkdir -p "$(dirname "$CTS_FILE")"
+        for v in 12 13 14; do grep -qx "$v" "$CTS_FILE" 2>/dev/null || echo "$v" >> "$CTS_FILE"; done
+
         source build/envsetup.sh
         lunch ${{ env.MAKEFILE_NAME }}-ap2a-eng
         
