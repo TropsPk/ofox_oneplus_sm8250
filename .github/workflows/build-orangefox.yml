@@ -42,7 +42,18 @@ jobs:
         sudo apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php* mongodb* snapd* || true
         sudo apt-get -y autoremove --purge && sudo apt-get -y clean
         docker system prune -af --volumes || true
-        # Note: Swapfile is intentionally kept alive to prevent OOM kills.
+
+    - name: 💾 Add Swap (anti-OOM)
+      run: |
+        sudo swapoff -a || true
+        sudo rm -f /mnt/swapfile /swapfile
+        sudo fallocate -l 16G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+        sudo sysctl vm.swappiness=60
+        free -h
+        df -h / /mnt
 
     - name: ⚙️ Setup Environment & Sync
       env:
@@ -101,7 +112,8 @@ jobs:
         source build/envsetup.sh
         lunch ${{ env.MAKEFILE_NAME }}-ap2a-eng
         
-        mka recoveryimage 2>&1 | tee build.log
+        free -h
+        mka recoveryimage -j4 2>&1 | tee build.log
         BUILD_STATUS=${PIPESTATUS[0]}
         
         echo "📊 Printing CCache Statistics:"
