@@ -42,7 +42,6 @@ AB_OTA_PARTITIONS += \
     my_bigball my_carrier my_company my_engineering my_heytap my_manifest my_preload my_product my_region my_stock \
     odm product qupfw recovery storsec system system_ext tz vbmeta vbmeta_system vendor xbl xbl_config
 BOARD_USES_METADATA_PARTITION := true
-BOARD_BUILD_SYSTEM_ROOT_IMAGE := false
 
 # Partition sizes as read from the device (blockdev --getsize64)
 BOARD_BOOTIMAGE_PARTITION_SIZE := 100663296
