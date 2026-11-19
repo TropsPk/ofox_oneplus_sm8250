@@ -13,11 +13,11 @@ jobs:
   build:
     name: 🛠️ Build by ${{ github.actor }}
     runs-on: ubuntu-22.04
-    timeout-minutes: 180
+    timeout-minutes: 350
 
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      MANIFEST_BRANCH: "12.1"
+      MANIFEST_BRANCH: "14.1"
       
       DEVICE_NAME: "instantnoodle"
       MAKEFILE_NAME: "ofox_instantnoodle"

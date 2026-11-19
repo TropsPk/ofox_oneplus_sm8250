@@ -1,5 +1,10 @@
 # device_oneplus_instantnoodle
 
+> **Branch `ofox14.1`: experiment, not for release.** Builds with the OrangeFox `fox_14.1` manifest (AOSP 14.0.0_r67 base)
+> instead of 12.1. The OrangeFox 14.1 branch is described as experimental and its sync is very long. `main` stays on 12.1.
+> Start it by hand: Actions > Build OrangeFox > Run workflow > choose branch `ofox14.1` (pushes here do not start a build).
+
+
 Unified OrangeFox recovery tree for the OnePlus 8 (`instantnoodle`) and OnePlus 8 Pro (`instantnoodlep`), kona, OxygenOS 13.1.0.593.
 One tree, one image for both devices; the variant is chosen at boot by `recovery/root/system/bin/runatboot.sh` from `ro.boot.prj_version`.
 Goal: decrypt `/data` on the stock ROM.
