@@ -99,7 +99,7 @@ jobs:
         export CCACHE_COMPRESS=1
         
         source build/envsetup.sh
-        lunch ${{ env.MAKEFILE_NAME }}-eng
+        lunch ${{ env.MAKEFILE_NAME }}-ap2a-eng
         
         mka recoveryimage 2>&1 | tee build.log
         BUILD_STATUS=${PIPESTATUS[0]}
