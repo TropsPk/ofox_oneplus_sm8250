@@ -38,10 +38,13 @@ jobs:
 
     - name: 🧹 Free Up Disk Space (Native Beast)
       run: |
+        df -h /
         sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost /opt/hostedtoolcache/CodeQL
+        sudo rm -rf /opt/hostedtoolcache /usr/local/.ghcup /usr/local/share/powershell /usr/local/share/chromium /usr/share/swift /usr/local/julia* /opt/az /usr/local/lib/node_modules
         sudo apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php* mongodb* snapd* || true
         sudo apt-get -y autoremove --purge && sudo apt-get -y clean
         docker system prune -af --volumes || true
+        df -h /
 
     - name: 💾 Add Swap (anti-OOM)
       run: |
@@ -118,8 +121,11 @@ jobs:
         lunch ${{ env.MAKEFILE_NAME }}-ap2a-eng
         
         free -h
+        df -h /
         mka recoveryimage -j4 2>&1 | tee build.log
         BUILD_STATUS=${PIPESTATUS[0]}
+        df -h /
+        du -sh out 2>/dev/null
         
         echo "📊 Printing CCache Statistics:"
         ccache -s
