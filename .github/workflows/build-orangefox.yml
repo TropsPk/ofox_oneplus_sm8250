@@ -30,30 +30,22 @@ jobs:
       KERNEL_TREE_BRANCH: "Staging"
 
     steps:
+    - name: 💽 Maximize Build Space
+      uses: easimon/maximize-build-space@v10
+      with:
+        root-reserve-mb: 4096
+        swap-size-mb: 8192
+        remove-dotnet: 'true'
+        remove-android: 'true'
+        remove-haskell: 'true'
+        remove-codeql: 'true'
+        remove-docker-images: 'true'
+
     - name: 🕒 Set Build Date
       run: echo "BUILD_DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
 
     - name: 📥 Checkout Repository
       uses: actions/checkout@v4
-
-    - name: 🧹 Free Up Disk Space (Native Beast)
-      run: |
-        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost /opt/hostedtoolcache/CodeQL
-        sudo apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php* mongodb* snapd* || true
-        sudo apt-get -y autoremove --purge && sudo apt-get -y clean
-        docker system prune -af --volumes || true
-
-    - name: 💾 Add Swap (anti-OOM)
-      run: |
-        sudo swapoff -a || true
-        sudo rm -f /mnt/swapfile /swapfile
-        sudo fallocate -l 16G /mnt/swapfile
-        sudo chmod 600 /mnt/swapfile
-        sudo mkswap /mnt/swapfile
-        sudo swapon /mnt/swapfile
-        sudo sysctl vm.swappiness=60
-        free -h
-        df -h / /mnt
 
     - name: ⚙️ Setup Environment & Sync
       env:
@@ -87,7 +79,7 @@ jobs:
     - name: ⚡ Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2.14
       with:
-        max-size: "10G"
+        max-size: "5G"
         key: ${{ runner.os }}-ccache-${{ env.DEVICE_NAME }}-${{ env.KERNEL_TREE_BRANCH }}
         restore-keys: |
           ${{ runner.os }}-ccache-${{ env.DEVICE_NAME }}-
@@ -150,10 +142,11 @@ jobs:
         done
 
     - name: 📤 Upload Artifacts
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: OrangeFox-${{ env.DEVICE_NAME }}-${{ env.BUILD_DATE }}
-        if-no-files-found: error
+        if-no-files-found: warn
         path: |
           workspace/out/target/product/${{ env.DEVICE_NAME }}/OrangeFox-*.zip
           workspace/out/target/product/${{ env.DEVICE_NAME }}/boot.img
