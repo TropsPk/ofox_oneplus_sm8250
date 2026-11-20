@@ -57,3 +57,4 @@ c3d1c260f9460aa5a7ef55e5000b3a5951195b5c434e143ba05acea2ba456179  /vendor/lib64/
 6d6766ac69916403f1d42876152b83fe4301248350f81e6542e0724386eb33f2  /vendor/lib64/vendor.qti.hardware.tui_comm@1.0.so
 ebbc2cdda107ccf14fa11b8bbb61b2287edecda4779c719a4651cef8b188989c  /vendor/lib64/libhidltransport.so
 09f379e6db01bc70e2e74abd2d5570cee738d7d66b03aa9ad38d957b55fe4b9b  /vendor/lib64/libhwbinder.so
+4f9eaf34914370454a7b0ccf5d666f28ed982fe3931c3133d767f833e6f0e298  /vendor/lib64/librecovery_updater.so
