@@ -45,6 +45,8 @@ jobs:
         sudo apt-get -y autoremove --purge && sudo apt-get -y clean
         docker system prune -af --volumes || true
         df -h /
+        fallocate -l 3M "$RUNNER_WORKSPACE/.log_reserve"
+        ls -l "$RUNNER_WORKSPACE/.log_reserve"
 
     - name: 💾 Add Swap (anti-OOM)
       run: |
@@ -87,30 +89,14 @@ jobs:
         retry git clone --depth 1 ${{ env.DEVICE_TREE_URL }} -b ${{ env.DEVICE_TREE_BRANCH }} $GITHUB_WORKSPACE/workspace/${{ env.DEVICE_PATH }}
         retry git clone --depth 1 -b ${{ env.KERNEL_TREE_BRANCH }} ${{ env.KERNEL_TREE_URL }} $GITHUB_WORKSPACE/workspace/${{ env.KERNEL_PATH }}
 
-    - name: ⚡ Setup ccache
-      uses: hendrikmuhs/ccache-action@v1.2.14
-      with:
-        max-size: "10G"
-        key: ${{ runner.os }}-ccache-${{ env.DEVICE_NAME }}-${{ env.KERNEL_TREE_BRANCH }}
-        restore-keys: |
-          ${{ runner.os }}-ccache-${{ env.DEVICE_NAME }}-
-
     - name: 🚀 Build Recovery
       run: |
         set +e
-        
-        mkdir -p $GITHUB_WORKSPACE/.ccache
-        mv $GITHUB_WORKSPACE/.ccache $GITHUB_WORKSPACE/workspace/.ccache
-        export CCACHE_DIR=$GITHUB_WORKSPACE/workspace/.ccache
         
         cd $GITHUB_WORKSPACE/workspace
         export ALLOW_MISSING_DEPENDENCIES=true
         export FOX_USE_TWRP_RECOVERY_IMAGE_BUILDER=1
         export LC_ALL="C"
-        
-        export USE_CCACHE=1
-        export CCACHE_EXEC=$(command -v ccache)
-        export CCACHE_COMPRESS=1
         
         # Minimal OrangeFox manifest lacks the CTS release list that cts.mk checks
         CTS_FILE=cts/tests/tests/os/assets/platform_releases.txt
@@ -124,13 +110,9 @@ jobs:
         df -h /
         mka recoveryimage -j4 2>&1 | tee build.log
         BUILD_STATUS=${PIPESTATUS[0]}
+        rm -f "$RUNNER_WORKSPACE/.log_reserve"
         df -h /
         du -sh out 2>/dev/null
-        
-        echo "📊 Printing CCache Statistics:"
-        ccache -s
-        
-        mv $GITHUB_WORKSPACE/workspace/.ccache $GITHUB_WORKSPACE/.ccache
         
         set -e
         exit $BUILD_STATUS
@@ -138,6 +120,7 @@ jobs:
     - name: 📊 Summary & Hashes
       if: always()
       run: |
+        rm -f "$RUNNER_WORKSPACE/.log_reserve"
         OUT=$GITHUB_WORKSPACE/workspace/out/target/product/${{ env.DEVICE_NAME }}
         
         for f in "$OUT"/OrangeFox-*.zip; do
