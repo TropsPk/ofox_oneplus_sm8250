@@ -121,19 +121,6 @@ jobs:
           done
         fi
 
-        # Diagnostics: show which GNU binutils the kernel Makefile can find (it runs `which <CROSS_COMPILE>elfedit`)
-        echo "::group::gcc toolchain diagnostics"
-        for d in prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin; do
-          echo "== $d"; ls "$d" 2>&1 | grep -E 'elfedit|-as$|androidkernel-(as|ld|gcc)$' || echo "(no elfedit/as/androidkernel tools listed)"
-        done
-        for c in aarch64-linux-android- arm-linux-androidkernel-; do
-          case "$c" in aarch64*) dir=prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin;; *) dir=prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin;; esac
-          echo "which $PWD/$dir/${c}elfedit -> [$(which "$PWD/$dir/${c}elfedit" 2>&1)]"
-          echo "exists ${c}as: $(ls -l "$dir/${c}as" 2>&1)"
-        done
-        echo "which which -> [$(command -v which)]"
-        echo "::endgroup::"
-
         source build/envsetup.sh
         lunch ${{ env.MAKEFILE_NAME }}-ap2a-eng
         
