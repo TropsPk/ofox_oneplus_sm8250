@@ -35,9 +35,6 @@ lib64 libspcom.so
 ?hw android.hardware.boot@1.0-impl-1.1-qti.so
 # Stock location of libboot_control_qti is /vendor/lib64 (not hw/).
 ?lib64 libboot_control_qti.so
-# libboot_control_qti.so NEEDS librecovery_updater.so; without it the vendor boot HAL fails to load and boot-hal-1-1 crash-loops (recovery log, 593).
-# Stock location is /vendor/lib64 (the reference ships it in hw/ instead).
-lib64 librecovery_updater.so
 # OPlus cryptoeng trusted-app firmware. Stock has it only in /odm/vendor/firmware; the references ship it in both places, so both are filled.
 ?fw cryptoeng.b00
 ?fw cryptoeng.b01
