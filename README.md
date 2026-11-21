@@ -28,14 +28,14 @@ Goal: decrypt `/data` on the stock ROM.
 4. Test with `fastboot boot recovery.img` before flashing anything.
 
 ## Kernel
-Prebuilt: `prebuilt/Image` (arm64, Linux 4.19.157-Tropsi-X-Kernel) from the Tropsi X release, used through `TARGET_PREBUILT_KERNEL`. The workflow no longer clones the kernel source. Not built into a recovery yet, so it is untested.
+Prebuilt: `prebuilt/Image` (arm64, Linux 4.19.157-Tropsi-X-Kernel, r22, built with the AOSP 12L clang r416183b) from the Tropsi X release, used through `TARGET_PREBUILT_KERNEL`. The workflow no longer clones the kernel source. Not built into a recovery yet, so it is untested.
 
 ## Prebuilt files
-All three come from the TropsPk/Tropsi-Builder release `1794145644`, `instantnoodle-oxygen13.1_a13_Tropsi_X_noroot-20261108134644-AnyKernel3.zip` (sha256 `e56b4c63ff6e49e981efd090ff501421b6553ba9dc50da3535b20c8aaa5f8c3b`).
+All three come from `Tropsi-X-Kernel-r22-noroot.zip` (sha256 `9a8d8be29b259354e928b564ec891ae1eaee427a6f09aacb65df9f80a29faf94`). The dtb and dtbo are byte-identical to the ones from the earlier TropsPk/Tropsi-Builder release `1794145644`.
 
 | File | sha256 |
 |---|---|
-| `Image` | `05ad91f1e5ddfd95cdbe2f458f17f1f0ee6c892b425b82c0628e4b74d655ec53` |
+| `Image` | `060b06da1f4345bd8f5dcf5b75ff0294ad795d18eae3704185e94be056d82fcf` |
 | `dtb.img` (zip: `dtb`) | `90013c5fc39ac520c22601cbe556f1ffe38aca092bc1f520146be509e85884ee` |
 | `dtbo.img` | `afd49d1077bf92139f5172f0a7ee126c0c3c8209951872b0fd330b13bf21bfe7` |
 
