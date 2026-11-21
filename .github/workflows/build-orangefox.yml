@@ -25,6 +25,9 @@ jobs:
       DEVICE_TREE_URL: "${{ github.server_url }}/${{ github.repository }}"
       DEVICE_TREE_BRANCH: "${{ github.ref_name }}"
       
+      KERNEL_PATH: "kernel/oneplus/sm8250"
+      KERNEL_TREE_URL: "https://github.com/TropsPk/Tropsi_X_Kernel_SM8250"
+      KERNEL_TREE_BRANCH: "Staging"
 
     steps:
     - name: 🕒 Set Build Date
@@ -84,6 +87,7 @@ jobs:
       run: |
         retry() { for i in 1 2 3; do "$@" && return 0 || { echo "Network blip detected. Retrying in 5s..."; sleep 5; }; done; return 1; }
         retry git clone --depth 1 ${{ env.DEVICE_TREE_URL }} -b ${{ env.DEVICE_TREE_BRANCH }} $GITHUB_WORKSPACE/workspace/${{ env.DEVICE_PATH }}
+        retry git clone --depth 1 -b ${{ env.KERNEL_TREE_BRANCH }} ${{ env.KERNEL_TREE_URL }} $GITHUB_WORKSPACE/workspace/${{ env.KERNEL_PATH }}
 
     - name: 🚀 Build Recovery
       run: |
