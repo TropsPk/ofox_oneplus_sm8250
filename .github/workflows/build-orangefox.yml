@@ -110,17 +110,6 @@ jobs:
           grep -n 'deprecated-non-prototype' "$OAES_MK"
         fi
 
-        # Kernel make flags come from the synced build system with LLVM_IAS=1; use LLVM_IAS=0 (external GNU as) instead
-        IAS_FILES=$(grep -rIl 'LLVM_IAS=1' build vendor 2>/dev/null || true)
-        if [ -z "$IAS_FILES" ]; then
-          echo "::warning::LLVM_IAS=1 not found under build/ or vendor/ - LLVM_IAS=0 NOT applied"
-        else
-          for f in $IAS_FILES; do
-            sed -i 's/LLVM_IAS=1/LLVM_IAS=0/g' "$f"
-            echo "LLVM_IAS=0 applied in $f:"; grep -n 'LLVM_IAS' "$f"
-          done
-        fi
-
         source build/envsetup.sh
         lunch ${{ env.MAKEFILE_NAME }}-ap2a-eng
         
