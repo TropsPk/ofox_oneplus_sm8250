@@ -27,7 +27,7 @@ jobs:
       
       KERNEL_PATH: "kernel/oneplus/sm8250"
       KERNEL_TREE_URL: "https://github.com/TropsPk/Tropsi_X_Kernel_SM8250"
-      KERNEL_TREE_BRANCH: "Staging"
+      KERNEL_TREE_BRANCH: "testing"
 
     steps:
     - name: 🕒 Set Build Date
