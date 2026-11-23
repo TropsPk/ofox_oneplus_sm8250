@@ -13,11 +13,11 @@ jobs:
   build:
     name: 🛠️ Build by ${{ github.actor }}
     runs-on: ubuntu-22.04
-    timeout-minutes: 180
+    timeout-minutes: 350
 
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      MANIFEST_BRANCH: "12.1"
+      MANIFEST_BRANCH: "14.1"
       
       DEVICE_NAME: "instantnoodle"
       MAKEFILE_NAME: "ofox_instantnoodle"
@@ -99,8 +99,15 @@ jobs:
         mkdir -p "$(dirname "$CTS_FILE")"
         for v in 12 13 14; do grep -qx "$v" "$CTS_FILE" 2>/dev/null || echo "$v" >> "$CTS_FILE"; done
 
+        # clang r510928 makes -Wdeprecated-non-prototype an error for the legacy openaes C code (Android.mk modules get -Wall -Werror)
+        OAES_MK=bootable/recovery/openaes/Android.mk
+        if [ -f "$OAES_MK" ] && ! grep -q 'Wno-error=deprecated-non-prototype' "$OAES_MK"; then
+          sed -i 's#^\([[:space:]]*\)include \$(BUILD_\(EXECUTABLE\|SHARED_LIBRARY\|STATIC_LIBRARY\))#\1LOCAL_CFLAGS += -Wno-error=deprecated-non-prototype\n&#' "$OAES_MK"
+          grep -n 'deprecated-non-prototype' "$OAES_MK"
+        fi
+
         source build/envsetup.sh
-        lunch ${{ env.MAKEFILE_NAME }}-eng
+        lunch ${{ env.MAKEFILE_NAME }}-ap2a-eng
         
         free -h
         df -h /
