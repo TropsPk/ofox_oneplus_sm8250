@@ -14,7 +14,6 @@ service hal_cryptoeng_oplus /system/bin/vendor.oplus.hardware.cryptoeng@1.0-serv
 # Start it by hand: adb shell start vendor.keymasterd
 service vendor.keymasterd /system/bin/keymasterd
     class late_start
-    disabled
     user system
     group system
     disabled
@@ -31,6 +30,10 @@ service unified-props /system/bin/runatboot.sh
 on init
     # Initial backlight level (panel max is 4095); the UI level is TW_DEFAULT_BRIGHTNESS
     write /sys/class/backlight/panel0-backlight/brightness 1500
+    # CPU governor: the kernel default (schedutil) ramps too late for the CPU-drawn recovery UI. performance was tested on the phone: UI smooth.
+    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor performance
+    write /sys/devices/system/cpu/cpufreq/policy4/scaling_governor performance
+    write /sys/devices/system/cpu/cpufreq/policy7/scaling_governor performance
     # Boot HAL service name comes from the boot@1.2 impl package chosen in device.mk
     start boot-hal-1-1
     setprop sys.usb.config adb
