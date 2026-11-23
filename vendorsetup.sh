@@ -2,7 +2,9 @@
 # OrangeFox build variables
 # FOX_VERSION is intentionally absent (obsolete; terminates the build per the OrangeFox wiki).
 export TARGET_ARCH="arm64-v8a"
-export OF_MAINTAINER="UNSET"           # set your name before releasing
+export OF_MAINTAINER="TropsPk"
+# Maintainer avatar: 192x192 PNG, path relative to the build top (the tree is cloned to device/oneplus/instantnoodle)
+export OF_MAINTAINER_AVATAR="$PWD/device/oneplus/instantnoodle/misc/maintainer.png"
 export FOX_BUILD_DEVICE="instantnoodle"
 export ALLOW_MISSING_DEPENDENCIES=true
 export FOX_USE_TWRP_RECOVERY_IMAGE_BUILDER=1
