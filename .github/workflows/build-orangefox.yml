@@ -1,0 +1,144 @@
+name: 🦊 Build OrangeFox (Beast Edition)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: 🛠️ Build by ${{ github.actor }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MANIFEST_BRANCH: "12.1"
+      
+      DEVICE_NAME: "instantnoodle"
+      MAKEFILE_NAME: "ofox_instantnoodle"
+      DEVICE_PATH: "device/oneplus/instantnoodle"
+      DEVICE_TREE_URL: "${{ github.server_url }}/${{ github.repository }}"
+      DEVICE_TREE_BRANCH: "${{ github.ref_name }}"
+      
+      KERNEL_PATH: "kernel/oneplus/sm8250"
+      KERNEL_TREE_URL: "https://github.com/TropsPk/Tropsi_X_Kernel_SM8250"
+      KERNEL_TREE_BRANCH: "Staging"
+
+    steps:
+    - name: 🕒 Set Build Date
+      run: echo "BUILD_DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
+
+    - name: 📥 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🧹 Free Up Disk Space (Native Beast)
+      run: |
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost /opt/hostedtoolcache/CodeQL
+        sudo apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php* mongodb* snapd* || true
+        sudo apt-get -y autoremove --purge && sudo apt-get -y clean
+        docker system prune -af --volumes || true
+        # Note: Swapfile is intentionally kept alive to prevent OOM kills.
+
+    - name: ⚙️ Setup Environment & Sync
+      env:
+        GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+      run: |
+        set -eo pipefail
+        
+        retry() { for i in 1 2 3; do "$@" && return 0 || { echo "Network blip detected. Retrying in 5s..."; sleep 5; }; done; return 1; }
+        
+        sudo apt-get update && sudo apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python3 python-is-python3
+        
+        curl -fL https://storage.googleapis.com/git-repo-downloads/repo | sudo tee /usr/local/bin/repo > /dev/null
+        sudo chmod a+x /usr/local/bin/repo
+
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+        git config --global credential.helper ""
+        echo "machine gitlab.com login oauth2 password $GITLAB_TOKEN" > ~/.netrc && chmod 600 ~/.netrc
+
+        retry git clone https://gitlab.com/OrangeFox/sync.git sync
+        
+        cd sync
+        ./orangefox_sync.sh --branch ${{ env.MANIFEST_BRANCH }} --path $GITHUB_WORKSPACE/workspace
+
+    - name: 📱 Clone Trees
+      run: |
+        retry() { for i in 1 2 3; do "$@" && return 0 || { echo "Network blip detected. Retrying in 5s..."; sleep 5; }; done; return 1; }
+        retry git clone --depth 1 ${{ env.DEVICE_TREE_URL }} -b ${{ env.DEVICE_TREE_BRANCH }} $GITHUB_WORKSPACE/workspace/${{ env.DEVICE_PATH }}
+        retry git clone --depth 1 -b ${{ env.KERNEL_TREE_BRANCH }} ${{ env.KERNEL_TREE_URL }} $GITHUB_WORKSPACE/workspace/${{ env.KERNEL_PATH }}
+
+    - name: ⚡ Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2.14
+      with:
+        max-size: "10G"
+        key: ${{ runner.os }}-ccache-${{ env.DEVICE_NAME }}-${{ env.KERNEL_TREE_BRANCH }}
+        restore-keys: |
+          ${{ runner.os }}-ccache-${{ env.DEVICE_NAME }}-
+
+    - name: 🚀 Build Recovery
+      run: |
+        set +e
+        
+        mkdir -p $GITHUB_WORKSPACE/.ccache
+        mv $GITHUB_WORKSPACE/.ccache $GITHUB_WORKSPACE/workspace/.ccache
+        export CCACHE_DIR=$GITHUB_WORKSPACE/workspace/.ccache
+        
+        cd $GITHUB_WORKSPACE/workspace
+        export ALLOW_MISSING_DEPENDENCIES=true
+        export FOX_USE_TWRP_RECOVERY_IMAGE_BUILDER=1
+        export LC_ALL="C"
+        
+        export USE_CCACHE=1
+        export CCACHE_EXEC=$(command -v ccache)
+        export CCACHE_COMPRESS=1
+        
+        source build/envsetup.sh
+        lunch ${{ env.MAKEFILE_NAME }}-eng
+        
+        mka recoveryimage 2>&1 | tee build.log
+        BUILD_STATUS=${PIPESTATUS[0]}
+        
+        echo "📊 Printing CCache Statistics:"
+        ccache -s
+        
+        mv $GITHUB_WORKSPACE/workspace/.ccache $GITHUB_WORKSPACE/.ccache
+        
+        set -e
+        exit $BUILD_STATUS
+
+    - name: 📊 Summary & Hashes
+      if: always()
+      run: |
+        OUT=$GITHUB_WORKSPACE/workspace/out/target/product/${{ env.DEVICE_NAME }}
+        
+        for f in "$OUT"/OrangeFox-*.zip; do
+          if [ -f "$f" ]; then
+            mv "$f" "$OUT/OrangeFox-${{ env.DEVICE_NAME }}-${{ env.BUILD_DATE }}.zip"
+          fi
+        done
+        
+        echo "## 🦊 Build Output" >> $GITHUB_STEP_SUMMARY
+        echo "| File | Size | SHA256 Hash |" >> $GITHUB_STEP_SUMMARY
+        echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+        for f in "$OUT"/boot.img "$OUT"/recovery.img "$OUT"/OrangeFox-*.zip; do
+          if [ -f "$f" ]; then
+            echo "| \`$(basename "$f")\` | **$(du -h "$f" | cut -f1)** | \`$(sha256sum "$f" | cut -d' ' -f1)\` |" >> $GITHUB_STEP_SUMMARY
+          fi
+        done
+
+    - name: 📤 Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: OrangeFox-${{ env.DEVICE_NAME }}-${{ env.BUILD_DATE }}
+        if-no-files-found: error
+        path: |
+          workspace/out/target/product/${{ env.DEVICE_NAME }}/OrangeFox-*.zip
+          workspace/out/target/product/${{ env.DEVICE_NAME }}/boot.img
+          workspace/out/target/product/${{ env.DEVICE_NAME }}/recovery.img
+          workspace/build.log

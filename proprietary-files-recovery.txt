@@ -1,0 +1,74 @@
+# Stock files the recovery needs for FBE decryption on OnePlus 8 OxygenOS 13.1.0.593 (64-bit only).
+# Format: [?]<kind> <file name>   kind = bin | lib64 | hw | fw   '?' = optional (skipped silently when absent on the device)
+# The device path is searched: bin -> /vendor/bin /vendor/bin/hw /odm/bin/hw /odm/bin ; lib64 -> /vendor/lib64 /odm/lib64 /system/lib64 /system_ext/lib64 ;
+#   hw -> /vendor/lib64/hw /odm/lib64/hw ; fw -> /odm/vendor/firmware /vendor/firmware
+# Destination: bin -> recovery/root/system/bin ; lib64 -> recovery/root/vendor/lib64 ; hw -> recovery/root/vendor/lib64/hw ;
+#   fw -> recovery/root/odm/vendor/firmware and recovery/root/vendor/firmware
+bin android.hardware.keymaster@4.0-service-qti
+bin android.hardware.gatekeeper@1.0-service-qti
+bin qseecomd
+hw android.hardware.gatekeeper@1.0-impl-qti.so
+lib64 libQSEEComAPI.so
+lib64 libdiag.so
+lib64 libdrmfs.so
+lib64 libidl.so
+lib64 libkeymasterdeviceutils.so
+lib64 libkeymasterprovision.so
+lib64 libkeymasterutils.so
+lib64 libqcbor.so
+lib64 libqmi_cci.so
+lib64 libqmi_encdec.so
+lib64 libqmiservices.so
+lib64 libqtikeymaster4.so
+lib64 libspcom.so
+# OPlus cryptoeng (stock runs it as hal_cryptoeng_oplus). Optional: the reference trees decrypt although their copy cannot start.
+?bin vendor.oplus.hardware.cryptoeng@1.0-service
+# Optional: stock starts vendor.keymasterd at late-fs; whether decryption needs it is untested.
+?bin keymasterd
+?lib64 vendor.oplus.hardware.cryptoeng@1.0.so
+?lib64 vendor.oplus.hardware.commondcs-V1-ndk_platform.so
+?lib64 libqsee_keybox_ca.so
+?lib64 lib_cryptoeng_api.so
+?lib64 libjsoncpp.so
+?lib64 vendor.qti.hardware.soter@1.0.so
+# Boot control blobs that all references ship (unclear whether the built bootctrl.kona makes them redundant).
+?hw android.hardware.boot@1.0-impl-1.1-qti.so
+# Stock location of libboot_control_qti is /vendor/lib64 (not hw/).
+?lib64 libboot_control_qti.so
+# libboot_control_qti.so NEEDS librecovery_updater.so; without it the vendor boot HAL fails to load and boot-hal-1-1 crash-loops (recovery log, 593).
+# Stock location is /vendor/lib64. boot-hal-1-1 only searches /vendor/lib64/hw for dependencies (verified on the phone), so the same stock file is
+# also shipped in recovery/root/vendor/lib64/hw (the reference ships both). That hw copy is placed by hand, extract-files.sh does not refresh it.
+lib64 librecovery_updater.so
+# OPlus cryptoeng trusted-app firmware. Stock has it only in /odm/vendor/firmware; the references ship it in both places, so both are filled.
+?fw cryptoeng.b00
+?fw cryptoeng.b01
+?fw cryptoeng.b02
+?fw cryptoeng.b03
+?fw cryptoeng.b04
+?fw cryptoeng.b05
+?fw cryptoeng.b06
+?fw cryptoeng.b07
+?fw cryptoeng.mdt
+?lib64 librpmbengclient.so
+?lib64 libsecurity_event_dcs.so
+# qseecomd dlopen()s these at runtime (seen in /proc/<pid>/maps of stock qseecomd on 593, not in its ELF NEEDED list). Both reference trees ship them too.
+?lib64 libGPreqcancel.so
+?lib64 libGPreqcancel_svc.so
+?lib64 libStDrvInt.so
+?lib64 libdisplayconfig.qti.so
+?lib64 libdrm.so
+?lib64 libdrmtime.so
+?lib64 libops.so
+?lib64 libqisl.so
+?lib64 librpmb.so
+?lib64 libsecureui.so
+?lib64 libsecureui_svcsock.so
+?lib64 libspl.so
+?lib64 libssd.so
+?lib64 libtime_genoff.so
+?lib64 vendor.display.config@1.0.so
+?lib64 vendor.display.config@2.0.so
+?lib64 vendor.qti.hardware.tui_comm@1.0.so
+# cryptoeng service links these two vendor stubs on stock (/vendor/lib64); recovery may not have them.
+?lib64 libhidltransport.so
+?lib64 libhwbinder.so
