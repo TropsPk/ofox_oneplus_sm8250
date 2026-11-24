@@ -164,14 +164,18 @@ jobs:
         python3 -W ignore $GITHUB_WORKSPACE/ldcheck -p system/lib64:vendor/lib64:system/lib:vendor/lib ${{ inputs.LDCHECKPATH }} 2>&1 | tee /tmp/ldcheck.txt
         { echo "## 🔎 LDCheck"; echo '```'; cat /tmp/ldcheck.txt; echo '```'; } >> $GITHUB_STEP_SUMMARY
 
-    - name: 📤 Upload Artifacts
+    - name: 📤 Upload recovery.img
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
-        name: OrangeFox-${{ env.DEVICE_NAME }}-${{ env.BUILD_DATE }}
+        path: workspace/out/target/product/${{ env.DEVICE_NAME }}/recovery.img
+        archive: false
         if-no-files-found: warn
-        path: |
-          workspace/out/target/product/${{ env.DEVICE_NAME }}/OrangeFox-*.zip
-          workspace/out/target/product/${{ env.DEVICE_NAME }}/boot.img
-          workspace/out/target/product/${{ env.DEVICE_NAME }}/recovery.img
-          workspace/build.log
+
+    - name: 📤 Upload flashable zip
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        path: workspace/out/target/product/${{ env.DEVICE_NAME }}/OrangeFox-*.zip
+        archive: false
+        if-no-files-found: warn
