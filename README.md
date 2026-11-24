@@ -9,7 +9,7 @@ Goal: decrypt `/data` on the stock ROM.
 ## Layout
 - `BoardConfig.mk`, `device.mk`, `ofox_instantnoodle.mk`, `AndroidProducts.mk`, `Android.mk`, `Android.bp`, `vendorsetup.sh`, `system.prop`, `ofox.dependencies`
 - `recovery/root/` - init rc files, ueventd, `recovery.fstab`, `twrp.flags`, vintf manifests, `runatboot.sh`
-- `prebuilt/` - `dtb.img`, `dtbo.img` (the kernel is built from source, see Kernel)
+- `prebuilt/` - `Image`, `dtb.img`, `dtbo.img` (the kernel is prebuilt, see Kernel)
 - `bootctrl/`, `gpt-utils/` - module definitions used by `device.mk`
 - `extract-files.sh`, `proprietary-files-recovery.txt`, `proprietary-files-recovery.sha256` - pull the decryption blobs from the phone
 - `.github/workflows/build-orangefox.yml` - build in GitHub Actions
@@ -23,13 +23,14 @@ Goal: decrypt `/data` on the stock ROM.
 4. Test with `fastboot boot recovery.img` before flashing anything.
 
 ## Kernel
-Built from source: `TropsPk/Tropsi_X_Kernel_SM8250` (branch set in the workflow) is cloned to `kernel/oneplus/sm8250`, config `vendor/kona-perf_defconfig`. Not built yet, so it is untested.
+Prebuilt: `prebuilt/Image` (arm64, Linux 4.19.157-Tropsi-X-Kernel, r22, built with the AOSP 12L clang r416183b) from the Tropsi X release, used through `TARGET_PREBUILT_KERNEL`. The workflow does not clone or build any kernel source. Not built into a recovery yet, so it is untested.
 
 ## Prebuilt files
-Both come from the TropsPk/Tropsi-Builder release `1794145644`, `instantnoodle-oxygen13.1_a13_Tropsi_X_noroot-20261108134644-AnyKernel3.zip` (sha256 `e56b4c63ff6e49e981efd090ff501421b6553ba9dc50da3535b20c8aaa5f8c3b`).
+All three come from `Tropsi-X-Kernel-r22-noroot.zip` (sha256 `9a8d8be29b259354e928b564ec891ae1eaee427a6f09aacb65df9f80a29faf94`), the same files as on the `ofox14.1` branch. The dtb and dtbo are byte-identical to the ones from the earlier TropsPk/Tropsi-Builder release `1794145644`.
 
 | File | sha256 |
 |---|---|
+| `Image` | `060b06da1f4345bd8f5dcf5b75ff0294ad795d18eae3704185e94be056d82fcf` |
 | `dtb.img` (zip: `dtb`) | `90013c5fc39ac520c22601cbe556f1ffe38aca092bc1f520146be509e85884ee` |
 | `dtbo.img` | `afd49d1077bf92139f5172f0a7ee126c0c3c8209951872b0fd330b13bf21bfe7` |
 

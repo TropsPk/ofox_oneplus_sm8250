@@ -94,15 +94,12 @@ BOARD_KERNEL_CMDLINE := \
     cgroup.memory=nokmem,nosocket \
     reboot=panic_warm \
     kpti=off
-# Kernel is built from source: kernel/oneplus/sm8250 is TropsPk/Tropsi_X_Kernel_SM8250 (cloned by the workflow).
-# vendor/kona-perf_defconfig is the config of the Tropsi X release (CONFIG_LOCALVERSION -Tropsi-X-Kernel).
-# UNVERIFIED: not built yet; needs a CI run to confirm the tree builds with the OrangeFox 12.1 clang.
-# dtb and dtbo stay prebuilt from the Tropsi X release (see README). The dtb goes in through --dtb;
-# BOARD_INCLUDE_DTB_IN_BOOTIMG is intentionally not set.
+# Kernel, dtb and dtbo are prebuilt from the Tropsi X release (see README). The kernel Image goes in through
+# TARGET_PREBUILT_KERNEL; the dtb goes in through --dtb. BOARD_INCLUDE_DTB_IN_BOOTIMG is intentionally not set.
+# UNVERIFIED: needs a CI run to confirm the build system takes the prebuilt Image.
 TARGET_KERNEL_ARCH := arm64
 TARGET_NO_KERNEL := false
-TARGET_KERNEL_SOURCE := kernel/oneplus/sm8250
-TARGET_KERNEL_CONFIG := vendor/kona-perf_defconfig
+TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/Image
 TARGET_PREBUILT_DTB := $(DEVICE_PATH)/prebuilt/dtb.img
 BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
 BOARD_INCLUDE_RECOVERY_DTBO := true
