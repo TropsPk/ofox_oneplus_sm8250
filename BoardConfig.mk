@@ -47,6 +47,11 @@ BOARD_BUILD_SYSTEM_ROOT_IMAGE := false
 # Partition sizes as read from the device (blockdev --getsize64)
 BOARD_BOOTIMAGE_PARTITION_SIZE := 100663296
 BOARD_RECOVERYIMAGE_PARTITION_SIZE := 104857600
+# Pad recovery.img to the partition size and add an unsigned AVB hash footer (partition name "recovery"), the same
+# layout as the stock recovery.img (104857600 bytes, AVBf footer) and as the Wishmasterflo release images.
+# Only the footer is enabled here; no vbmeta image args and no signing key (the stock footer uses the OnePlus key).
+# UNVERIFIED: needs a CI run to confirm the built recovery.img is 104857600 bytes with an AVB footer.
+BOARD_AVB_ENABLE := true
 BOARD_DTBOIMG_PARTITION_SIZE := 25165824
 BOARD_FLASH_BLOCK_SIZE := 262144
 BOARD_SUPER_PARTITION_SIZE := 15032385536
