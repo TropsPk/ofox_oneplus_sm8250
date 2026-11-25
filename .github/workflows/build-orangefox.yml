@@ -177,6 +177,27 @@ jobs:
         python3 -W ignore $GITHUB_WORKSPACE/ldcheck -p system/lib64:vendor/lib64:system/lib:vendor/lib ${{ inputs.LDCHECKPATH }} 2>&1 | tee /tmp/ldcheck.txt
         { echo "## 🔎 LDCheck"; echo '```'; cat /tmp/ldcheck.txt; echo '```'; } >> $GITHUB_STEP_SUMMARY
 
+    - name: 🔎 Linker diagnostics (libjsoncpp)
+      # Shows which libjsoncpp.so copies are in the built ramdisk, which one the recovery linker can reach first, and who links it.
+      if: ${{ always() && inputs.LDCHECK }}
+      continue-on-error: true
+      run: |
+        sudo apt-get install -y binutils >/dev/null
+        cd $GITHUB_WORKSPACE/workspace/out/target/product/${{ env.DEVICE_NAME }}/recovery/root
+        {
+          echo "## 🔎 libjsoncpp / linker"
+          echo "### ld.config.txt"; echo '```'; cat system/etc/ld.config.txt 2>&1; echo '```'
+          echo "### libjsoncpp.so copies (sha256 prefix, operator= exports)"; echo '```'
+          for f in $(find . -name 'libjsoncpp.so'); do echo "$f $(sha256sum "$f" | cut -c1-16)"; nm -D --defined-only "$f" 2>&1 | grep -E '_ZN4Json5ValueaS'; done
+          echo '```'
+          echo "### ELF files that NEED libjsoncpp.so"; echo '```'
+          for f in $(find system vendor -type f \( -path '*/bin/*' -o -name '*.so' \) 2>/dev/null); do readelf -d "$f" 2>/dev/null | grep -q 'NEEDED.*libjsoncpp.so' && echo "$f"; done
+          echo '```'
+          echo "### LD_LIBRARY_PATH in rc files"; echo '```'
+          grep -rIn 'LD_LIBRARY_PATH' --include='*.rc' . 2>/dev/null
+          echo '```'
+        } >> $GITHUB_STEP_SUMMARY
+
     - name: 📤 Upload recovery.img
       if: always()
       uses: actions/upload-artifact@v7
