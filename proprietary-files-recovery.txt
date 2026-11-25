@@ -1,8 +1,8 @@
 # Stock files the recovery needs for FBE decryption on OnePlus 8 OxygenOS 13.1.0.593 (64-bit only).
-# Format: [?]<kind> <file name>   kind = bin | lib64 | hw | fw   '?' = optional (skipped silently when absent on the device)
+# Format: [?]<kind> <file name>   kind = bin | lib64 | vndk30 | hw | fw   '?' = optional (skipped silently when absent on the device)
 # The device path is searched: bin -> /vendor/bin /vendor/bin/hw /odm/bin/hw /odm/bin ; lib64 -> /vendor/lib64 /odm/lib64 /system/lib64 /system_ext/lib64 ;
-#   hw -> /vendor/lib64/hw /odm/lib64/hw ; fw -> /odm/vendor/firmware /vendor/firmware
-# Destination: bin -> recovery/root/system/bin ; lib64 -> recovery/root/vendor/lib64 ; hw -> recovery/root/vendor/lib64/hw ;
+#   vndk30 -> /apex/com.android.vndk.v30/lib64 ; hw -> /vendor/lib64/hw /odm/lib64/hw ; fw -> /odm/vendor/firmware /vendor/firmware
+# Destination: bin -> recovery/root/system/bin ; lib64 and vndk30 -> recovery/root/vendor/lib64 ; hw -> recovery/root/vendor/lib64/hw ;
 #   fw -> recovery/root/odm/vendor/firmware and recovery/root/vendor/firmware
 bin android.hardware.keymaster@4.0-service-qti
 bin android.hardware.gatekeeper@1.0-service-qti
@@ -29,7 +29,9 @@ lib64 libspcom.so
 ?lib64 vendor.oplus.hardware.commondcs-V1-ndk_platform.so
 ?lib64 libqsee_keybox_ca.so
 ?lib64 lib_cryptoeng_api.so
-?lib64 libjsoncpp.so
+# libjsoncpp for cryptoeng: stock cryptoeng loads /apex/com.android.vndk.v30/lib64/libjsoncpp.so (/proc/<pid>/maps on 593). The /system/lib64 copy is a
+# different, newer-ABI build without the Json::Value::operator=(Value) symbol that cryptoeng imports.
+?vndk30 libjsoncpp.so
 ?lib64 vendor.qti.hardware.soter@1.0.so
 # Boot control blobs that all references ship (unclear whether the built bootctrl.kona makes them redundant).
 ?hw android.hardware.boot@1.0-impl-1.1-qti.so

@@ -14,7 +14,7 @@ aa81e27f2227a279756ac14969372eeb4810861c59fd17f284ce7fd1bbc7c310  /odm/vendor/fi
 f34ef32676c97e6d3c7efa858ef6c17871e986e8251a3ec414c0875c8430061c  /odm/vendor/firmware/cryptoeng.b06
 fde1d9a876ab86b6e4656ce8eda2265dfbc2cc07bce5d1e40ddf88f86393538c  /odm/vendor/firmware/cryptoeng.b07
 bad1766bf1aec467cce84ff59aaaf29ff18c4987debeddd7bcc381f9ac80e516  /odm/vendor/firmware/cryptoeng.mdt
-c5bf120870e0e6010e096d94ad9cca9e369e02e0c8c81a2fb4893aa353628d8d  /system/lib64/libjsoncpp.so
+21b38f26209726248ed998028e619b90001f76fbcc05927379399be28abfdcde  /apex/com.android.vndk.v30/lib64/libjsoncpp.so
 2f819a9dfeb42dde1e4dfabfbed149c9e4372490c038491fc4487f993d8d8f3f  /vendor/bin/hw/android.hardware.gatekeeper@1.0-service-qti
 fd2597901ab5686d2f55c876bfb39fe18059c5f793fab58c735c64ba270fb3db  /vendor/bin/hw/android.hardware.keymaster@4.0-service-qti
 d6c85e8f3fd53b0bba7482d86b6ee335fa719045ac9943bc4e016d24b9048585  /vendor/bin/keymasterd

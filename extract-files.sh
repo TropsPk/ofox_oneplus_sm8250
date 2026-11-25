@@ -5,12 +5,14 @@
 #         ./extract-files.sh local            (run ON the phone in Termux with root: copies straight from /vendor /odm /system into recovery/root)
 # Every copied file is compared with proprietary-files-recovery.sha256 (the 593 stock hashes read on a OnePlus 8); a HASHDIFF line means the phone
 # runs different firmware than the one this tree was verified against. Blobs are proprietary: keep the repository private unless you accept redistributing them.
+# The vndk30 kind reads /apex/com.android.vndk.v30/lib64 (live phone for adb/local; in dir mode ROOT needs apex/com.android.vndk.v30/lib64/ from the extracted VNDK v30 apex).
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd); TREE=$HERE; RR=$TREE/recovery/root
 mode=${1:-}; src=${2:-}
 case "$mode" in adb|local) ;; dir) [ -n "$src" ] || { sed -n '2,6p' "$0"; exit 1; } ;; *) sed -n '2,6p' "$0"; exit 1 ;; esac
 BIN="/vendor/bin /vendor/bin/hw /odm/bin/hw /odm/bin"
 LIB="/vendor/lib64 /odm/lib64 /system/lib64 /system_ext/lib64"
+VNDK30="/apex/com.android.vndk.v30/lib64"
 HW="/vendor/lib64/hw /odm/lib64/hw"
 FW="/odm/vendor/firmware /vendor/firmware"
 fetch() { # $1=device path  $2=destination file ; returns 0 if copied
@@ -26,7 +28,7 @@ while read -r kind name; do
   case "$kind" in ''|\#*) continue ;; esac
   opt=0; [ "${kind:0:1}" = "?" ] && { opt=1; kind=${kind:1}; }
   dest2=""
-  case "$kind" in bin) dirs=$BIN; dest=$RR/system/bin ;; lib64) dirs=$LIB; dest=$RR/vendor/lib64 ;; hw) dirs=$HW; dest=$RR/vendor/lib64/hw ;; fw) dirs=$FW; dest=$RR/odm/vendor/firmware; dest2=$RR/vendor/firmware ;; *) echo "bad kind $kind"; continue ;; esac
+  case "$kind" in bin) dirs=$BIN; dest=$RR/system/bin ;; lib64) dirs=$LIB; dest=$RR/vendor/lib64 ;; vndk30) dirs=$VNDK30; dest=$RR/vendor/lib64 ;; hw) dirs=$HW; dest=$RR/vendor/lib64/hw ;; fw) dirs=$FW; dest=$RR/odm/vendor/firmware; dest2=$RR/vendor/firmware ;; *) echo "bad kind $kind"; continue ;; esac
   mkdir -p "$dest"; ok=0
   for d in $dirs; do if fetch "$d/$name" "$dest/$name"; then
       want=$(awk -v p="$d/$name" '$2==p {print $1}' "$HERE/proprietary-files-recovery.sha256"); have=$(sha_of "$dest/$name")
