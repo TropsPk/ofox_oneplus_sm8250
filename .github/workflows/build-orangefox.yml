@@ -93,6 +93,19 @@ jobs:
         retry() { for i in 1 2 3; do "$@" && return 0 || { echo "Network blip detected. Retrying in 5s..."; sleep 5; }; done; return 1; }
         retry git clone --depth 1 ${{ env.DEVICE_TREE_URL }} -b ${{ env.DEVICE_TREE_BRANCH }} $GITHUB_WORKSPACE/workspace/${{ env.DEVICE_PATH }}
 
+    - name: 🖼️ Apply maintainer avatar
+      # OrangeFox 12.1 ignores OF_MAINTAINER_AVATAR: the About page loads the
+      # theme image Default/About/maintainer, so replace it in the theme source.
+      run: |
+        set -e
+        SRC=$GITHUB_WORKSPACE/workspace/${{ env.DEVICE_PATH }}/misc/maintainer.png
+        DST=$GITHUB_WORKSPACE/workspace/bootable/recovery/gui/theme/portrait_hdpi/images/Default/About/maintainer.png
+        test -f "$SRC" || { echo "::error::Avatar not found: $SRC"; exit 1; }
+        test -f "$DST" || { echo "::error::Theme avatar not found: $DST"; exit 1; }
+        cp -f "$SRC" "$DST"
+        cmp "$SRC" "$DST"
+        sha256sum "$DST"
+
     - name: ⚡ Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2.14
       with:
